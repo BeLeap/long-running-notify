@@ -17,6 +17,11 @@ pub fn main() anyerror!void {
   var argv_list = std.ArrayList([]u8).init(allocator);
   defer argv_list.deinit();
 
+  var skipped = arg_it.skip();
+  if (skipped == false) {
+    return;
+  }
+
   while (true) {
     if (arg_it.next(allocator)) |maybe_arg| {
       var arg = maybe_arg catch |err| { 
@@ -30,8 +35,13 @@ pub fn main() anyerror!void {
     }
   }
 
+  var child_process = try std.ChildProcess.init(argv_list.items, allocator);
+  defer child_process.deinit();
+
+  var term = try std.ChildProcess.spawnAndWait(child_process);
+  try stdout.print("ended with {s}\n", .{term});
+
   for (argv_list.items) |arg| {
-    try stdout.print("{s}\n", .{arg});
-    defer allocator.free(arg);
+    allocator.free(arg);
   }
 }
