@@ -14,6 +14,9 @@ pub fn main() anyerror!void {
   var arg_it = process.args();
   defer arg_it.deinit();
 
+  var argv_list = std.ArrayList([]u8).init(allocator);
+  defer argv_list.deinit();
+
   while (true) {
     if (arg_it.next(allocator)) |maybe_arg| {
       var arg = maybe_arg catch |err| { 
@@ -21,10 +24,14 @@ pub fn main() anyerror!void {
         return err;
       };
 
-      defer allocator.free(arg);
-      std.debug.print("{s} ", .{arg});
+      try argv_list.append(arg);
     } else {
       break;
     }
+  }
+
+  for (argv_list.items) |arg| {
+    try stdout.print("{s}\n", .{arg});
+    defer allocator.free(arg);
   }
 }
