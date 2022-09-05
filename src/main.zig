@@ -35,6 +35,9 @@ pub fn main() anyerror!void {
     }
   }
 
+  if (argv_list.items.len <= 0) {
+    return;
+  }
   var child_process = try std.ChildProcess.init(argv_list.items, allocator);
   defer child_process.deinit();
 
