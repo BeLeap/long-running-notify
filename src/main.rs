@@ -3,10 +3,10 @@ use clap::Parser;
 #[derive(Parser)]
 #[clap(author, version, about)]
 struct Cli {
-    #[clap(short, long, value_parser)]
+    #[clap(short, long)]
     target_email: String,
 
-    #[clap(value_parser)]
+    #[clap()]
     command: Vec<String>,
 }
 
