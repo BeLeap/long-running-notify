@@ -4,6 +4,10 @@
 name = "lrn"
 version = "0.1.0"
 edition = "2021"
+description = "Long Running Command Notifier"
+license = "MIT"
+homepage = "https://github.com/BeLeap/long-running-notify"
+repository = "https://github.com/BeLeap/long-running-notify"
 
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.
