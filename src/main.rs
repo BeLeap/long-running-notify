@@ -28,6 +28,10 @@ impl EmailAddr {
             domain: splitted_email[1].to_string(),
         }
     }
+
+    pub fn get_raw(&self) -> String {
+        format!("{}@{}", self.id, self.domain)
+    }
 }
 
 fn main() {
@@ -47,7 +51,7 @@ fn main() {
     let email_addr = EmailAddr::new(&cli.target_email);
 
     let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap();
-    let smtp_server = resolver.lookup(email_addr.domain, RecordType::MX).unwrap();
+    let smtp_server = resolver.lookup(&email_addr.domain, RecordType::MX).unwrap();
     let smtp_record = smtp_server.iter()
         .fold(None, |acc: Option<&MX>, e| match e {
             RData::MX(mx_record) => {
@@ -68,7 +72,7 @@ fn main() {
 
     let email = Message::builder()
         .from("Long Running Notifier <notify@beleap.dev>".parse().unwrap())
-        .to(format!("You <{}>", cli.target_email).parse().unwrap())
+        .to(format!("You <{}>", email_addr.get_raw()).parse().unwrap())
         .message_id(Some(format!("<{}@beleap.dev>", Ulid::new().to_string())))
         .subject(format!("`{}` finished!", real_command))
         .body(format!("`{}` finished with status {}", real_command, output))
