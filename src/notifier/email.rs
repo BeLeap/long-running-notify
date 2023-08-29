@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use super::{Notifier, NotifierError};
 use lettre::{Message, SmtpTransport, Transport};
 use trust_dns_resolver::{
