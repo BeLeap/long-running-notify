@@ -1,3 +1,5 @@
+use std::{error::Error, fmt::Display};
+
 use super::{Notifier, NotifierError};
 use lettre::{Message, SmtpTransport, Transport};
 use trust_dns_resolver::{
@@ -36,6 +38,14 @@ pub enum EmailNotifierError {
     FailedToSendMessage,
 }
 
+impl Display for EmailNotifierError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#?}", self)
+    }
+}
+
+impl Error for EmailNotifierError {}
+
 pub struct EmailNotifier {
     email_addr: String,
 }
@@ -47,23 +57,17 @@ impl EmailNotifier {
 }
 
 impl Notifier for EmailNotifier {
-    fn send(&self, summary: String, content: String) -> Result<(), super::NotifierError> {
+    fn send(&self, summary: String, content: String) -> Result<(), Box<dyn Error>> {
         let email_addr = EmailAddr::new(&self.email_addr);
 
         let resolver = match Resolver::new(ResolverConfig::default(), ResolverOpts::default()) {
             Ok(v) => v,
-            Err(_) => {
-                return Err(NotifierError::EmailNotifierError(
-                    EmailNotifierError::FailedNameResolverCreation,
-                ))
-            }
+            Err(_) => return Err(Box::new(EmailNotifierError::FailedNameResolverCreation)),
         };
         let smtp_server = match resolver.lookup(&email_addr.domain, RecordType::MX) {
             Ok(v) => v,
             Err(_) => {
-                return Err(NotifierError::EmailNotifierError(
-                    EmailNotifierError::FailedNameResolution,
-                ));
+                return Err(Box::new(EmailNotifierError::FailedNameResolution));
             }
         };
         let smtp_record = match smtp_server
@@ -85,9 +89,7 @@ impl Notifier for EmailNotifier {
             }) {
             Some(v) => v,
             None => {
-                return Err(NotifierError::EmailNotifierError(
-                    EmailNotifierError::EmptyMXRecord,
-                ));
+                return Err(Box::new(EmailNotifierError::EmptyMXRecord));
             }
         };
 
@@ -99,20 +101,14 @@ impl Notifier for EmailNotifier {
             .body(format!("`{}` finished with status {}", summary, content))
         {
             Ok(v) => v,
-            Err(_) => {
-                return Err(NotifierError::EmailNotifierError(
-                    EmailNotifierError::InvalidMessage,
-                ))
-            }
+            Err(_) => return Err(Box::new(EmailNotifierError::InvalidMessage)),
         };
 
         let mailer = SmtpTransport::builder_dangerous(smtp_record.exchange().to_string()).build();
 
         match mailer.send(&email) {
             Ok(_) => Ok(()),
-            Err(_) => Err(NotifierError::EmailNotifierError(
-                EmailNotifierError::FailedToSendMessage,
-            )),
+            Err(_) => Err(Box::new(EmailNotifierError::FailedToSendMessage)),
         }
     }
 }

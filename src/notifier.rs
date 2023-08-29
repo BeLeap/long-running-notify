@@ -1,12 +1,8 @@
-use self::email::EmailNotifierError;
+use std::error::Error;
 
 pub mod email;
-
-#[derive(Debug)]
-pub enum NotifierError {
-    EmailNotifierError(EmailNotifierError),
-}
+pub mod freedesktop;
 
 pub trait Notifier {
-    fn send(&self, summary: String, content: String) -> Result<(), NotifierError>;
+    fn send(&self, summary: String, content: String) -> Result<(), Box<dyn Error>>;
 }
