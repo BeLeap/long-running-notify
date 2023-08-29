@@ -20,3 +20,4 @@ clap = { version = "4.0.18", features = ["derive"] }
 lettre = "0.10.1"
 ulid = "1.0.0"
 trust-dns-resolver = "0.22.0"
+dbus = "0.9.7"

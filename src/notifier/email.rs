@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::Display};
 
-use super::{Notifier, NotifierError};
+use super::Notifier;
 use lettre::{Message, SmtpTransport, Transport};
 use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},

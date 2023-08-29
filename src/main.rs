@@ -1,5 +1,5 @@
-use clap::Parser;
-use notifier::{email::EmailNotifier, Notifier};
+use clap::{Parser, ValueEnum};
+use notifier::{email::EmailNotifier, freedesktop::FreedesktopNotifier, Notifier};
 use std::process::Command;
 
 mod notifier;
@@ -7,11 +7,20 @@ mod notifier;
 #[derive(Parser)]
 #[clap(author, version, about)]
 struct Cli {
+    #[clap(value_enum)]
+    mode: Mode,
+
     #[clap(short, long)]
-    target_email: String,
+    target_email: Option<String>,
 
     #[clap()]
     command: Vec<String>,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Mode {
+    Email,
+    Notification,
 }
 
 fn main() {
@@ -28,8 +37,17 @@ fn main() {
 
     let output = command.status().unwrap();
 
-    let email_notifier = EmailNotifier::new(cli.target_email);
-    email_notifier
-        .send(real_command, output.to_string())
-        .unwrap();
+    match cli.mode {
+        Mode::Email => {
+            let target_email = cli
+                .target_email
+                .expect("target_email is required for email mode");
+            let notifier = EmailNotifier::new(target_email);
+            notifier.send(real_command, output.to_string()).unwrap();
+        }
+        Mode::Notification => {
+            let notifier = FreedesktopNotifier::new();
+            notifier.send(real_command, output.to_string()).unwrap();
+        }
+    }
 }
